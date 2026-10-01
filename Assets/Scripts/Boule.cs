@@ -24,10 +24,12 @@ public class Boule : MonoBehaviour
     /// Obtient la vélocité actuelle de la boule.
     /// </summary>
     public Vector3 Velocite => rigidbody.linearVelocity;
-
     private void Start()
     {
         rigidbody = GetComponent<Rigidbody>();
+        PlayerInput controles = ControleurJeu.Instance.Controles;
+        InputAction actionDeplacement = controles.actions.FindAction("Commencer");
+        actionDeplacement.performed += CommencerDirection;
     }
 
     private void OnDestroy()
@@ -59,7 +61,7 @@ public class Boule : MonoBehaviour
 
     private void CommencerDirection(InputAction.CallbackContext contexte)
     {
-        forceAppliquee += contexte.ReadValue<float>() * forceDeplacement * Vector3.right;
+        forceAppliquee += contexte.ReadValue<float>() * forceDeplacement * Vector3.forward;
     }
 
     private void ArreterDirection(InputAction.CallbackContext contexte)
@@ -69,7 +71,20 @@ public class Boule : MonoBehaviour
 
     private void Diriger()
     {
-        if(!Mathf.Approximately(forceAppliquee.sqrMagnitude, 0.0f))
+        PlayerInput controles = ControleurJeu.Instance.Controles;
+        InputAction actionDeplacement = controles.actions.FindAction("Diriger");
+
+        // Source: https://docs.unity3d.com/Packages/com.unity.inputsystem@1.18/api/UnityEngine.InputSystem.Controls.ButtonControl.html#UnityEngine_InputSystem_Controls_ButtonControl_wasPressedThisFrame
+        if (Keyboard.current.dKey.wasPressedThisFrame)
+        {
+            rigidbody.position += transform.right;
+        } else if (Keyboard.current.aKey.wasPressedThisFrame)
+        {
+            // Source: https://www.reddit.com/r/Unity2D/comments/zaxvsm/why_is_transformleft_not_a_thing_for_unity/
+            rigidbody.position += -transform.right;
+        }
+
+        if (!Mathf.Approximately(forceAppliquee.sqrMagnitude, 0.0f))
         {
             rigidbody.AddForce(forceAppliquee, ForceMode.Force);
         }
